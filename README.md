@@ -1,152 +1,149 @@
-## 🎬 Watch Me Build This Lab!
-
-# Lab 01 — Hosting Your First Static Website in Azure
+# Hosting Your First Static Website in Azure
 
 ---
 
 ## Overview
 
-In this lab you'll deploy a public-facing static website using **Azure Blob Storage** — no web server required. This is your introduction to PaaS (Platform as a Service) and serverless hosting: you supply the content, Azure manages the infrastructure.
+This project deploys a public-facing static website using **Azure Blob Storage** with infrastructure provisioned via **Terraform**. There are no virtual machines, no web servers, and no app runtimes involved — Azure Blob Storage serves the HTML file directly to the internet through a built-in static website endpoint.
+
+Rather than clicking through the Azure Portal, all resources are defined as code, making the deployment repeatable, version-controlled, and consistent across environments.
 
 ---
 
 ## Architecture
 
-```
-User (Browser)
-     │
-     │  HTTPS
-     ▼
-Public Primary Endpoint
-(https://stlab01[yourname].z13.web.core.windows.net)
-     │
-     │  Routes to
-     ▼
-┌─────────────────────────────────────────┐
-│       Azure Storage Account             │
-│       (stlab01[yourname])               │
-│                                         │
-│   ┌─────────────────────────────────┐   │
-│   │       $web Container            │   │
-│   │   Static Website Hosting: ON    │   │
-│   │                                 │   │
-│   │   📄 index.html                 │   │
-│   │   📄 404.html                   │   │
-│   └─────────────────────────────────┘   │
-└─────────────────────────────────────────┘
-```
+![Architecture Diagram](./architecture.svg)
 
-**Key insight:** There are no virtual machines, no web servers, and no app runtimes involved. Azure Blob Storage serves your HTML file directly to the internet via a built-in static website endpoint.
+**Key insight:** The storage account is locked down — public blob access is disabled and all traffic is forced over HTTPS with a minimum of TLS 1.2. The static website endpoint is the only intended ingress point.
 
 ---
 
 ## Prerequisites
 
-- [ ] Active Azure Subscription (Free Tier works fine)
-- [ ] Completed Week 1 Video Modules
-- [ ] A text editor (Notepad, TextEdit, or VS Code)
+- [ ] Active Azure Subscription ([Free Tier](https://azure.microsoft.com/en-us/free/) works fine)
+- [ ] [Terraform](https://developer.hashicorp.com/terraform/install) installed (v1.3+)
+- [ ] [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) installed and authenticated (`az login`)
+- [ ] Access to the [Azure Portal](https://portal.azure.com)
+- [ ] A text editor (VS Code recommended)
 
 ---
 
 ## Naming Conventions
 
-Use these exact values throughout the lab to stay consistent.
-
 | Resource | Value |
 |---|---|
-| Resource Group | `rg-lab01-[yourname]` |
-| Storage Account | `stlab01[yourname]` |
-| Region | East US |
+| Resource Group | `var.resource_group_name` |
+| Storage Account | `var.storage_account_name` |
+| Region | Defined via `var.location` |
 
 > **Note:** Storage account names must be globally unique, all lowercase, and contain only letters and numbers — no hyphens or special characters.
 
 ---
 
-## Step-by-Step Instructions
+## Project Structure
 
-### Phase 1 — Create the Resource Group
-
-1. Log in to the [Azure Portal](https://portal.azure.com).
-2. Search for **Resource Groups** in the top search bar and click **+ Create**.
-3. Fill in the **Basics** tab:
-   - **Subscription:** Select your subscription.
-   - **Resource group:** `rg-lab01-[yourname]`
-   - **Region:** `(US) East US`
-4. Click **Review + create** → **Create**.
-
----
-
-### Phase 2 — Create the Storage Account
-
-1. Search for **Storage accounts** in the search bar and click **+ Create**.
-2. Fill in the **Basics** tab:
-   - **Resource group:** `rg-lab01-[yourname]`
-   - **Storage account name:** `stlab01[yourname]` *(e.g., `stlab01jhante`)*
-   - **Region:** `(US) East US`
-   - **Performance:** Standard
-   - **Redundancy:** Locally-redundant storage (LRS)
-3. Click **Review + create**. Wait for validation, then click **Create**.
-4. Once deployment completes (~30 seconds), click **Go to resource**.
-
----
-
-### Phase 3 — Enable Static Website Hosting
-
-1. In the left-hand menu of your Storage Account, scroll to the **Data management** section.
-2. Click **Static website**.
-3. Toggle the switch from **Disabled** to **Enabled**.
-4. Set the following values:
-   - **Index document name:** `index.html`
-   - **Error document path:** `404.html` *(optional but recommended)*
-5. Click **Save**.
-
-> ✅ **Important:** After saving, a **Primary endpoint** URL will appear (e.g., `https://stlab01jhante.z13.web.core.windows.net/`). **Copy this URL** — it is your website's public address.
-
----
-
-### Phase 4 — Create the Website File
-
-Open your text editor and paste the following HTML:
-
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>My First Cloud Site</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; margin-top: 50px; background-color: #f0f0f0; }
-        h1 { color: #0078d4; }
-    </style>
-</head>
-<body>
-    <h1>Hello from the Cloud!</h1>
-    <p>This site is hosted on Azure Blob Storage.</p>
-    <p>Deployed by: [Your Name]</p>
-</body>
-</html>
+```
+.
+├── main.tf          # Resource Group and Storage Account definitions
+├── variables.tf     # Input variable declarations
+└── index.html       # Static website content
 ```
 
-Save the file to your Desktop as **`index.html`**.
+---
+
+## Security Decisions
+
+| Setting | Value | Why |
+|---|---|---|
+| `allow_nested_items_to_be_public` | `false` | Prevents individual blobs from being made publicly accessible |
+| `public_network_access_enabled` | `false` | Restricts access to the static website endpoint only |
+| `https_traffic_only_enabled` | `true` | Enforces encrypted transit — no plain HTTP |
+| `min_tls_version` | `TLS1_2` | Blocks older, vulnerable TLS versions (1.0, 1.1) |
+| `delete_retention_policy.days` | `7` | Soft-delete window for blob recovery |
 
 ---
 
-### Phase 5 — Upload Content to Azure
+## Deployment
 
-1. Return to the Azure Portal on your Storage Account.
-2. In the left menu, click **Containers** (under **Data storage**).
-3. Open the **`$web`** container — this was created automatically when you enabled static hosting.
-4. Click **Upload** at the top.
-5. Browse for your `index.html` file and click **Upload**.
+### 1 — Authenticate to Azure
+
+```bash
+az login
+```
+
+> 📸 **Screenshot:** Terminal output showing successful `az login` authentication.
+> `![az login output](./screenshots/01-az-login.png)`
 
 ---
 
-### Phase 6 — Validate the Deployment
+### 2 — Initialize Terraform
 
-1. Open a new browser tab.
-2. Paste the **Primary endpoint URL** you saved in Phase 3.
-3. Press Enter.
+```bash
+terraform init
+```
 
-You should see the **"Hello from the Cloud!"** page. Congratulations — you've deployed a serverless website on Azure. 🎉
+> 📸 **Screenshot:** Terminal output showing `Terraform has been successfully initialized`.
+> `![terraform init](./screenshots/02-terraform-init.png)`
+
+---
+
+### 3 — Review the plan
+
+```bash
+terraform plan
+```
+
+> 📸 **Screenshot:** Terminal output showing the planned resources — Resource Group and Storage Account — with the `Plan: 2 to add` summary line visible.
+> `![terraform plan](./screenshots/03-terraform-plan.png)`
+
+---
+
+### 4 — Apply
+
+```bash
+terraform apply
+```
+
+Type `yes` when prompted. Terraform will provision the Resource Group and Storage Account.
+
+> 📸 **Screenshot:** Terminal output showing `Apply complete! Resources: 2 added`.
+> `![terraform apply](./screenshots/04-terraform-apply.png)`
+
+---
+
+### 5 — Enable Static Website Hosting (Azure Portal)
+
+Once `terraform apply` completes, finish configuration through the Azure Portal:
+
+1. Navigate to the Storage Account in the [Azure Portal](https://portal.azure.com).
+2. In the left menu under **Data management**, click **Static website**.
+3. Toggle to **Enabled**.
+4. Set **Index document name** to `index.html` and **Error document path** to `404.html`.
+5. Click **Save**.
+6. Copy the **Primary endpoint** URL that appears — this is your site's public address.
+
+> 📸 **Screenshot:** Storage Account blade in the portal with the Static website panel open, toggle set to Enabled, and the Primary endpoint URL visible after saving.
+> `![static website enabled](./screenshots/05-static-website-enabled.png)`
+
+---
+
+### 6 — Upload Website Content (Azure Portal)
+
+1. In the left menu under **Data storage**, click **Containers**.
+2. Open the **`$web`** container (auto-created when static hosting was enabled).
+3. Click **Upload**, select your `index.html` file, and click **Upload**.
+
+> 📸 **Screenshot:** The `$web` container in the portal showing `index.html` successfully uploaded.
+> `![web container upload](./screenshots/06-web-container-upload.png)`
+
+---
+
+### 7 — Validate
+
+Open the Primary endpoint URL from Step 5 in a browser. You should see your static site live.
+
+> 📸 **Screenshot:** Browser displaying the live static website at the Azure primary endpoint URL.
+> `![live site](./screenshots/07-live-site.png)`
 
 ---
 
@@ -154,30 +151,34 @@ You should see the **"Hello from the Cloud!"** page. Congratulations — you've 
 
 | Symptom | Likely Cause | Fix |
 |---|---|---|
-| `404 - The requested content does not exist.` | Filename mismatch | Ensure the file is named exactly `index.html` (case-sensitive). `Index.html` or `index.txt` will not resolve. |
-| `404` after correct upload | Wrong container | Confirm the file was uploaded to `$web`, not a different container. |
-| `Storage account name is already taken` | Name collision | Storage names are globally unique across all of Azure. Append numbers to your name (e.g., `stlab01jhante99`). |
+| `404 - The requested content does not exist.` | Filename mismatch | The file must be named exactly `index.html` — Azure is case-sensitive. |
+| `404` after correct upload | Wrong container | Confirm the file was uploaded to `$web`, not another container. |
+| `Storage account name is already taken` | Global name collision | Append random numbers to the name (e.g., `stwebsite99`). |
+| Static website toggle missing | Feature not visible | Ensure you're in the Storage Account blade, not the Resource Group. |
 
 ---
 
 ## Clean Up
 
-> Always delete lab resources when you're done to avoid unnecessary charges.
+Destroy all provisioned resources with a single command:
 
-1. Go to **Resource Groups** in the Azure Portal.
-2. Click `rg-lab01-[yourname]`.
-3. Click **Delete resource group**.
-4. Type the resource group name to confirm.
-5. Click **Delete**.
+```bash
+terraform destroy
+```
+
+Type `yes` when prompted. This removes the Resource Group and everything inside it.
+
+> 📸 **Screenshot:** Terminal output showing `Destroy complete! Resources: 2 destroyed`.
+> `![terraform destroy](./screenshots/08-terraform-destroy.png)`
 
 ---
 
 ## What You Learned
 
-- How to create an **Azure Resource Group** and **Storage Account** via the portal.
-- How to enable **Static Website Hosting** on Azure Blob Storage.
-- How Azure automatically provisions the **`$web` container** as the origin for your static site.
-- The difference between traditional server hosting and **serverless/PaaS delivery**.
+- How to define and provision an **Azure Resource Group** and **Storage Account** using Terraform.
+- How to apply **security hardening** at the storage account level (TLS enforcement, no public blob access).
+- How to enable **static website hosting** and upload content via the Azure Portal.
+- A hybrid IaC workflow — infrastructure provisioned as code, post-deploy configuration handled through the portal.
 
 ---
 
@@ -186,7 +187,3 @@ You should see the **"Hello from the Cloud!"** page. Congratulations — you've 
 | Lab | Topic |
 |---|---|
 | Lab 02 | *(Coming soon)* |
-
----
-
-*Part of the Azure Cloud Foundations lab series.*
