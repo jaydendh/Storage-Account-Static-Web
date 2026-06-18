@@ -71,7 +71,7 @@ Rather than clicking through the Azure Portal, all resources are defined as code
 az login
 ```
 
-> `![az login output](./screenshots/azloginsucess1.png)
+> ![az login output](./screenshots/azloginsucess1.png)
 
 ---
 
@@ -80,9 +80,7 @@ az login
 ```bash
 terraform init
 ```
-
-> 📸 **Screenshot:** Terminal output showing `Terraform has been successfully initialized`.
-> `![terraform init](./screenshots/02-terraform-init.png)`
+> ![terraform init](./screenshots/tfinit1.png)
 
 ---
 
@@ -91,9 +89,7 @@ terraform init
 ```bash
 terraform plan
 ```
-
-> 📸 **Screenshot:** Terminal output showing the planned resources — Resource Group and Storage Account — with the `Plan: 2 to add` summary line visible.
-> `![terraform plan](./screenshots/03-terraform-plan.png)`
+> ![terraform plan](./screenshots/tfplan1.png)
 
 ---
 
@@ -105,8 +101,7 @@ terraform apply
 
 Type `yes` when prompted. Terraform will provision the Resource Group and Storage Account.
 
-> 📸 **Screenshot:** Terminal output showing `Apply complete! Resources: 2 added`.
-> `![terraform apply](./screenshots/04-terraform-apply.png)`
+> ![terraform apply](./screenshots/tfapply1.png)
 
 ---
 
@@ -121,8 +116,7 @@ Once `terraform apply` completes, finish configuration through the Azure Portal:
 5. Click **Save**.
 6. Copy the **Primary endpoint** URL that appears — this is your site's public address.
 
-> 📸 **Screenshot:** Storage Account blade in the portal with the Static website panel open, toggle set to Enabled, and the Primary endpoint URL visible after saving.
-> `![static website enabled](./screenshots/05-static-website-enabled.png)`
+> ![static website enabled](./screenshots/staticblade.png)
 
 ---
 
@@ -140,9 +134,8 @@ Once `terraform apply` completes, finish configuration through the Azure Portal:
 ### 7 — Validate
 
 Open the Primary endpoint URL from Step 5 in a browser. You should see your static site live.
-
-> 📸 **Screenshot:** Browser displaying the live static website at the Azure primary endpoint URL.
-> `![live site](./screenshots/07-live-site.png)`
+.
+> ![live site](./screenshots/staticrunning.png)
 
 ---
 
@@ -167,8 +160,7 @@ terraform destroy
 
 Type `yes` when prompted. This removes the Resource Group and everything inside it.
 
-> 📸 **Screenshot:** Terminal output showing `Destroy complete! Resources: 2 destroyed`.
-> `![terraform destroy](./screenshots/08-terraform-destroy.png)`
+> ![terraform destroy](./screenshots/tfdestroy1.png)
 
 ---
 
@@ -179,10 +171,3 @@ Type `yes` when prompted. This removes the Resource Group and everything inside 
 - How to enable **static website hosting** and upload content via the Azure Portal.
 - A hybrid IaC workflow — infrastructure provisioned as code, post-deploy configuration handled through the portal.
 
----
-
-## Related Labs
-
-| Lab | Topic |
-|---|---|
-| Lab 02 | *(Coming soon)* |
