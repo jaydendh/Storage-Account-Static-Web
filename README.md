@@ -71,8 +71,7 @@ Rather than clicking through the Azure Portal, all resources are defined as code
 az login
 ```
 
-> 📸 **Screenshot:** Terminal output showing successful `az login` authentication.
-> `![az login output](./screenshots/01-az-login.png)`
+> `![az login output](./screenshots/azloginsucess1.png)
 
 ---
 
