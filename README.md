@@ -2,11 +2,6 @@
 
 # Lab 01 — Hosting Your First Static Website in Azure
 
-> **Author:** Jhante Charles  
-> **Difficulty:** Beginner  
-> **Estimated Time:** 30 minutes  
-> **Concepts Covered:** Azure Blob Storage · PaaS · Serverless Hosting · Static Website Hosting
-
 ---
 
 ## Overview
