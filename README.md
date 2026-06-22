@@ -126,8 +126,6 @@ Once `terraform apply` completes, finish configuration through the Azure Portal:
 2. Open the **`$web`** container (auto-created when static hosting was enabled).
 3. Click **Upload**, select your `index.html` file, and click **Upload**.
 
-> 📸 **Screenshot:** The `$web` container in the portal showing `index.html` successfully uploaded.
-> `![web container upload](./screenshots/06-web-container-upload.png)`
 
 ---
 
